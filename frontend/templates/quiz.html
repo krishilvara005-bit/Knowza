@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Quiz Generation — KNOWZA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='knowza.css') }}" />
+</head>
+<body>
+<div class="glow a"></div><div class="glow b"></div><div class="rays"></div><div class="horizon"></div>
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('dashboard') }}">KNOWZA</a>
+    <div class="header-right"><span>{{ user }}</span><a href="{{ url_for('logout') }}">Logout</a></div>
+  </header>
+<div class="container narrow">
+  <a class="crumb" href="{{ url_for('dashboard') }}">&larr; Dashboard</a>
+  <h1 class="page-title">Quiz Generation</h1>
+  <p class="page-sub">Create a multiple-choice quiz on any topic.</p>
+
+  <!-- 1. SETUP -->
+  <div class="panel" id="setup">
+    <div class="field">
+      <label for="topic">Topic</label>
+      <input type="text" id="topic" placeholder="e.g. Quantum Physics, Binary Trees, World War II" maxlength="120" />
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="num">Number of questions (1–30)</label>
+        <input type="number" id="num" min="1" max="30" value="5" />
+      </div>
+    </div>
+    <div class="field">
+      <label>Difficulty</label>
+      <div class="diff" id="diff">
+        <button type="button" data-d="easy">Easy<small>Basics &amp; definitions</small></button>
+        <button type="button" data-d="medium" class="sel">Medium<small>Concepts &amp; application</small></button>
+        <button type="button" data-d="hard">Hard<small>Tricky &amp; in-depth</small></button>
+      </div>
+    </div>
+    <button class="btn" id="genBtn">Generate quiz</button>
+    <div class="err" id="setupErr"></div>
+  </div>
+
+  <div class="panel hidden" id="loading" style="text-align:center">
+    <div class="spin"></div>
+    <p>Generating your quiz…</p>
+  </div>
+
+  <!-- 2. QUIZ -->
+  <div class="hidden" id="quizView">
+    <div class="meta"><span id="quizTitle"></span><span class="badge" id="quizBadge"></span></div>
+    <div class="bar"><div id="progress"></div></div>
+    <div id="questions"></div>
+    <div class="submit-row">
+      <span id="answered"></span>
+      <button class="btn" id="submitBtn">Submit quiz</button>
+    </div>
+  </div>
+
+  <!-- 3. RESULT -->
+  <div class="panel hidden" id="resultView">
+    <div class="verdict" id="verdict"></div>
+    <div class="sub" id="resSub"></div>
+    <div class="score-card">
+      <div class="ring" id="ring"><div><div><div class="pct" id="pct">0%</div><div class="lbl">overall score</div></div></div></div>
+      <div class="stats">
+        <div class="stat g"><b id="sCorrect">0</b><span>Correct</span></div>
+        <div class="stat r"><b id="sWrong">0</b><span>Wrong</span></div>
+        <div class="stat y"><b id="sSkip">0</b><span>Skipped</span></div>
+      </div>
+    </div>
+    <h3 style="margin-top:6px">Answer review</h3>
+    <div class="filters" id="filters">
+      <button class="on" data-f="all">All</button>
+      <button data-f="no">Wrong</button>
+      <button data-f="skip">Skipped</button>
+      <button data-f="ok">Correct</button>
+    </div>
+    <div id="review"></div>
+    <div class="actions">
+      <button class="btn" id="retryBtn">Retry same quiz</button>
+      <button class="btn ghost" id="newBtn">New quiz</button>
+      <a class="btn ghost" href="{{ url_for('dashboard') }}">Dashboard</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const esc = t => String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const L = ['A','B','C','D'];
+  let difficulty = 'medium', quiz = [], meta = {};
+
+  function show(id) { ['setup','loading','quizView','resultView'].forEach(v => $(v).classList.toggle('hidden', v !== id)); window.scrollTo(0, 0); }
+
+  // difficulty picker (manual)
+  document.querySelectorAll('#diff button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#diff button').forEach(x => x.classList.remove('sel'));
+    b.classList.add('sel'); difficulty = b.dataset.d;
+  });
+
+  $('genBtn').onclick = async () => {
+    const topic = $('topic').value.trim();
+    const n = parseInt($('num').value, 10);
+    $('setupErr').textContent = '';
+    if (!topic) { $('setupErr').textContent = 'Please enter a topic.'; return; }
+    if (!(n >= 1 && n <= 30)) { $('setupErr').textContent = 'Number of questions must be between 1 and 30.'; return; }
+    show('loading');
+    try {
+      const res = await fetch('/api/generate-quiz', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic, numQuestions: n, difficulty })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'Failed to generate quiz');
+      if (!Array.isArray(data) || !data.length) throw new Error('No questions returned. Try another topic.');
+      quiz = data; meta = { topic, difficulty };
+      renderQuiz();
+    } catch (e) {
+      show('setup'); $('setupErr').textContent = e.message;
+    }
+  };
+
+  function renderQuiz() {
+    $('quizTitle').textContent = `${meta.topic} · ${quiz.length} question${quiz.length > 1 ? 's' : ''}`;
+    const bd = $('quizBadge'); bd.textContent = meta.difficulty; bd.className = 'badge ' + meta.difficulty;
+    $('questions').innerHTML = quiz.map((q, i) => `
+      <div class="q">
+        <h3>Q${i + 1}. ${esc(q.question)}</h3>
+        ${q.options.map((o, j) => `
+          <label class="opt"><input type="radio" name="q${i}" value="${L[j]}"><b>${L[j]}.</b><span>${esc(o)}</span></label>`).join('')}
+      </div>`).join('');
+    document.querySelectorAll('#questions input').forEach(r => r.onchange = updateProgress);
+    updateProgress(); show('quizView');
+  }
+
+  function answers() { return quiz.map((_, i) => { const c = document.querySelector(`input[name="q${i}"]:checked`); return c ? c.value : null; }); }
+
+  function updateProgress() {
+    const done = answers().filter(Boolean).length;
+    $('progress').style.width = (done / quiz.length * 100) + '%';
+    $('answered').textContent = `${done} of ${quiz.length} answered`;
+  }
+
+  $('submitBtn').onclick = () => {
+    const a = answers();
+    const left = a.filter(x => !x).length;
+    if (left && !confirm(`${left} question${left > 1 ? 's are' : ' is'} unanswered. Submit anyway?`)) return;
+    showResult(a);
+  };
+
+  function showResult(a) {
+    let correct = 0, wrong = 0, skip = 0;
+    const html = quiz.map((q, i) => {
+      const right = q.answer, mine = a[i];
+      const rightTxt = `${right}. ${esc(q.options[L.indexOf(right)] || '')}`;
+      let cls, body;
+      if (!mine) { skip++; cls = 'skip'; body = `<div class="line skip">Not answered</div><div class="line right">Correct answer: <b>${rightTxt}</b></div>`; }
+      else if (mine === right) { correct++; cls = 'ok'; body = `<div class="line yours-ok">Your answer: <b>${rightTxt}</b></div>`; }
+      else { wrong++; cls = 'no'; body = `<div class="line yours-bad">Your answer: <b>${mine}. ${esc(q.options[L.indexOf(mine)])}</b></div><div class="line right">Correct answer: <b>${rightTxt}</b></div>`; }
+      return `<div class="rev ${cls}" data-s="${cls}"><h4>Q${i + 1}. ${esc(q.question)}</h4>${body}${q.explanation ? `<div class="expl">${esc(q.explanation)}</div>` : ''}</div>`;
+    }).join('');
+
+    const pct = Math.round(correct / quiz.length * 100);
+    $('sCorrect').textContent = correct; $('sWrong').textContent = wrong; $('sSkip').textContent = skip;
+    $('pct').textContent = pct + '%';
+    const ring = $('ring');
+    ring.style.setProperty('--c', pct >= 70 ? 'var(--good)' : pct >= 40 ? 'var(--warn)' : 'var(--bad)');
+    ring.style.setProperty('--p', pct);
+    $('verdict').textContent = pct === 100 ? 'Perfect score' : pct >= 70 ? 'Great job' : pct >= 40 ? 'Good effort — keep practising' : 'Needs more practice';
+    $('resSub').textContent = `You got ${correct} out of ${quiz.length} correct · ${meta.topic} · ${meta.difficulty}`;
+    $('review').innerHTML = html;
+    document.querySelectorAll('#filters button').forEach(b => b.classList.toggle('on', b.dataset.f === 'all'));
+    show('resultView');
+    // wrong answers first for quick revision
+    const first = document.querySelector('#filters button[data-f="no"]');
+    if (wrong) first.click();
+  }
+
+  document.querySelectorAll('#filters button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#filters button').forEach(x => x.classList.toggle('on', x === b));
+    document.querySelectorAll('#review .rev').forEach(r => r.classList.toggle('hidden', b.dataset.f !== 'all' && r.dataset.s !== b.dataset.f));
+  });
+
+  $('retryBtn').onclick = renderQuiz;
+  $('newBtn').onclick = () => show('setup');
+</script>
+</body>
+</html>

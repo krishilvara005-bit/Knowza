@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard — KNOWZA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='knowza.css') }}" />
+</head>
+<body>
+<div class="glow a"></div><div class="glow b"></div><div class="rays"></div><div class="horizon"></div>
+  <header class="site-header">
+    <a class="brand" href="{{ url_for('dashboard') }}">KNOWZA</a>
+    <div class="header-right"><span>{{ user }}</span><a href="{{ url_for('logout') }}">Logout</a></div>
+  </header>
+  <div class="container">
+    <h1 class="page-title">Welcome back, {{ user }}</h1>
+    <p class="page-sub">What would you like to do today?</p>
+    <div class="cards">
+      <a class="card" href="{{ url_for('chat') }}">
+        <span class="num">01</span>
+        <h2>Chat with AI</h2>
+        <p>Ask any study question and get clear, structured answers.</p>
+        <ul><li>Attach PDFs, documents, notes and images</li><li>Upload a photo of a question and get it solved</li></ul>
+        <span class="go">Open chat &rarr;</span>
+      </a>
+      <a class="card" href="{{ url_for('quiz_setup') }}">
+        <span class="num">02</span>
+        <h2>Quiz Generation</h2>
+        <p>Create a multiple-choice quiz on any topic and test yourself.</p>
+        <ul><li>You choose the difficulty level</li><li>Score, percentage and correct answers at the end</li></ul>
+        <span class="go">Start a quiz &rarr;</span>
+      </a>
+    </div>
+  </div>
+</body>
+</html>

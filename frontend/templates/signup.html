@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Create Account — KNOWZA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='knowza.css') }}" />
+</head>
+<body>
+<div class="glow a"></div><div class="glow b"></div><div class="rays"></div><div class="horizon"></div>
+<div class="center-page">
+  <header class="site-header"><a class="brand" href="{{ url_for('index') }}">KNOWZA</a></header>
+  <main class="center-main">
+    <div class="auth-box">
+      <h1>Create your account</h1>
+      <p class="sub">Join KNOWZA to start studying smarter.</p>
+      {% with messages = get_flashed_messages() %}{% for m in messages %}<div class="flash">{{ m }}</div>{% endfor %}{% endwith %}
+      <form method="POST">
+        <div><label class="lbl" for="username">Username</label><input type="text" id="username" name="username" required autofocus /></div>
+        <div><label class="lbl" for="password">Password</label><input type="password" id="password" name="password" required /></div>
+        <button class="btn" type="submit">Create account</button>
+      </form>
+      <p class="alt">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+    </div>
+  </main>
+  <footer class="site-footer">Intelligence &bull; Innovation &bull; Possibilities</footer>
+</div>
+</body>
+</html>

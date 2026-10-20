@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>KNOWZA — Knowledge, Made Smarter.</title>
+  <meta name="description" content="KNOWZA is an AI study companion: ask questions, upload your notes and practise with quizzes on any topic." />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='knowza.css') }}" />
+</head>
+<body>
+<div class="glow a"></div><div class="glow b"></div><div class="rays"></div><div class="horizon"></div>
+<div class="center-page">
+  <header class="site-header">
+    <a class="brand-link" href="{{ url_for('index') }}" aria-label="KNOWZA home">
+      <img class="header-mark" src="{{ url_for('static', filename='knowza-mark.png') }}" alt="" />
+      <span class="brand">KNOWZA</span>
+    </a>
+    <nav class="header-right">
+      <a href="{{ url_for('login') }}">Login</a>
+      <a href="{{ url_for('signup') }}">Create account</a>
+    </nav>
+  </header>
+
+  <main class="intro-main">
+    <section class="intro">
+      <div class="logo-stage">
+        <img src="{{ url_for('static', filename='knowza-logo.png') }}" alt="KNOWZA — Knowledge, Made Smarter." width="1010" height="850" />
+      </div>
+
+      <p class="intro-lead">KNOWZA is an AI study companion for exam preparation. Ask any question, bring your own notes, and test yourself with quizzes built on the topics you choose.</p>
+
+      <div class="intro-actions">
+        <a class="btn" href="{{ url_for('login') }}">Login</a>
+        <a class="btn ghost" href="{{ url_for('signup') }}">Create account</a>
+      </div>
+
+      <div class="intro-points">
+        <div>
+          <h3>Ask anything</h3>
+          <p>Get clear, structured explanations with headings, tables and examples.</p>
+        </div>
+        <div>
+          <h3>Use your notes</h3>
+          <p>Upload PDFs, documents or images and ask questions about them.</p>
+        </div>
+        <div>
+          <h3>Practise with quizzes</h3>
+          <p>Generate multiple-choice tests at easy, medium or hard level and review every answer.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">Intelligence &bull; Innovation &bull; Possibilities</footer>
+</div>
+</body>
+</html>
